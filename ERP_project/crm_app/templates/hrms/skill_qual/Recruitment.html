@@ -1,0 +1,281 @@
+{% extends "dash_navbar.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+{% block content %}
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internal Job Portal</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        
+        .content-section {
+            display: none;
+        }
+
+        .active-section {
+            display: block;
+        }
+
+    </style>
+
+</head>
+
+<body>
+    
+    
+    
+    
+    <div class="container my-4" id="column-container">
+        <!-- Button Bar -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'JobRequision' %}" class="btn btn-primary">Job Requisition</a>
+                    <a href="{% url 'Recruitment' %}" class="btn btn-primary">Internal Job Posting</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Begin section widget -->
+        <div id="content-main-section">
+            <!-- Begin Menu Widget -->
+            <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'newInternalJobPosting' %}" data-target="job-posting" role="tab">Internal Job Posting</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'jobInterview' %}" data-target="job-interview" role="tab">Job Interview</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Approvals' %}" data-target="approvals" role="tab">Approvals</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'Relocation' %}" data-target="relocation" role="tab">Relocation</a>
+                </li>
+            </ul>
+            <!-- End Menu Widget -->
+
+            <!-- Internal Job Posting Section -->
+            <div id="job-posting" class="content-section active-section">
+                <h1 class="h3 mb-4 text-center">Find Internal Job Posting</h1>
+
+                <!-- Internal Job Posting Form (Added here) -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="{% url 'newInternalJobPosting' %}" class="btn btn-success" role="button">New Internal Job Posting</a>
+                </div>
+                
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Search Options</h3>
+                        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#searchOptions" aria-expanded="true" aria-controls="searchOptions">
+                            Collapse
+                        </button>
+                    </div>
+
+                    <div id="searchOptions" class="collapse show card-body">
+                        <form class="basic-form" id="searchForm">
+                            <div class="mb-3">
+                                <label for="applicationId" class="form-label">Application ID</label>
+                                <input type="text" class="form-control" name="applicationId" id="applicationId">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="statusId" class="form-label">Internal Job Posting</label>
+                                <select class="form-select" name="statusId" id="statusId">
+                                    <option value="">&nbsp;</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="applicationDate" class="form-label">Application Date</label>
+                                <input type="text" class="form-control date-time-picker" name="applicationDate" id="applicationDate">
+                                <select class="form-select mt-2" name="applicationDateOperator" id="applicationDateOperator">
+                                    <option value="equals">Equals</option>
+                                    <option value="lessThan">Less Than</option>
+                                    <option value="greaterThan">Greater Than</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="approverPartyId" class="form-label">Approver Party</label>
+                                <input type="text" class="form-control" name="approverPartyId" id="approverPartyId">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="jobRequisitionId" class="form-label">Job Requisition ID</label>
+                                <input type="text" class="form-control" name="jobRequisitionId" id="jobRequisitionId">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h3>Search Results</h3>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th scope="col">Application ID</th>
+                                <th scope="col">IJP Status</th>
+                                <th scope="col">Applying Party ID</th>
+                                <th scope="col">Application Date</th>
+                                <th scope="col">Approver Party</th>
+                                <th scope="col">Job Requisition ID</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            <!-- Data will be dynamically rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- End of Internal Job Posting Section -->
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+    function populateResultsTable(data) {
+    const tbody = document.querySelector('#resultsBody');
+    tbody.innerHTML = '';  // Clear existing results
+
+    if (data.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = '<td colspan="9">No results found.</td>'; // Updated colspan to match the number of columns
+        tbody.appendChild(emptyRow);
+    } else {
+        data.forEach((job, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${job.applicationId || 'N/A'}</td>
+                <td>${job.status || 'N/A'}</td>
+                <td>${job.applyingPartyId || 'N/A'}</td>
+                <td>${job.applicationDate || 'N/A'}</td>
+                <td>${job.approverPartyId  || 'N/A'}</td>
+                <td>${job.jobRequisitionId || 'N/A'}</td>
+                <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow('${job.applicationId}', '${job.applyingPartyId}')">
+                            Delete
+                        </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+}
+
+    document.getElementById('searchForm').addEventListener('submit', function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        // Collect form data
+        const applicationId = document.getElementById('applicationId').value;
+        const statusId = document.getElementById('statusId').value;
+        const applicationDate = document.getElementById('applicationDate').value;
+        const applicationDateOperator = document.getElementById('applicationDateOperator').value;  // Get selected operator
+        const approverPartyId = document.getElementById('approverPartyId').value;
+        const jobRequisitionId = document.getElementById('jobRequisitionId').value;
+        
+        // Create a payload to send to the server
+        const payload = {
+            applicationId: applicationId,
+            status : statusId,
+            applicationDate: applicationDate,
+            applicationDateOperator: applicationDateOperator,
+            approverPartyId: approverPartyId,
+            jobRequisitionId: jobRequisitionId,
+        };
+
+        // Make the AJAX request
+        fetch('/hrms/job-application-search/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Add CSRF token if needed
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => populateResultsTable(data))
+        .catch(error => console.error('Error fetching employee data:', error));
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Check if this cookie string begins with the name we want
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+//////////////////////////////////////////////////// Delete the Row onclicking Delete Button from the table //////////////////////////////////////////////
+
+    function deleteRow(applicationId, applyingPartyId) {
+    // Show a confirmation dialog
+    const confirmation = window.confirm("Are you sure you want to delete this job application?");
+    
+    if (confirmation) {
+        // Construct DELETE request URL with query parameters
+        const deleteUrl = `/hrms/api/delete-job-application/?applicationId=${applicationId}&applyingPartyId=${applyingPartyId}`;
+        
+        fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // CSRF token for security
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // If the delete was successful, find and remove the specific row in the table
+                const rows = document.querySelectorAll('#resultsBody tr');
+                rows.forEach(row => {
+                    // Extract the values from the current row to match with the provided parameters
+                    const rowApplicationId = row.querySelector('td:nth-child(1)').textContent.trim();
+                    const rowApplyingPartyId = row.querySelector('td:nth-child(3)').textContent.trim();
+
+                    // Check if the row matches the given identifiers
+                    if (rowApplicationId === applicationId && rowApplyingPartyId === applyingPartyId) {
+                        row.remove(); // Remove the matching row from the table
+                        alert('Job application deleted successfully');
+                    }
+                });
+            } else {
+                alert('Failed to delete the job application');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the record');
+        });
+    } else {
+        console.log('Delete action canceled');
+    }
+}
+
+</script>
+</body>
+
+</html>
+{% endblock %}

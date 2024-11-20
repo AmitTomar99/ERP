@@ -1,0 +1,233 @@
+{% extends "dash_navbar.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Approvals</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container my-4">
+    <div class="page-title text-center">
+        <h2>Find Approvals</h2>
+    </div>
+    
+    <div id="searchOptions" class="card mt-4">
+        <div class="card-header">
+            <h5>Search Options</h5>
+        </div>
+        <div class="card-body">
+            <form id="searchForm" method="POST" action="#">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="applicationId">Application ID</label>
+                        <input type="text" class="form-control" id="applicationId" name="applicationId">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="statusId">Internal Job Posting Status</label>
+                        <select class="form-control" id="statusId" name="statusId">
+                            <option value="">Select Status</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="applyingPartyId">Applying Party ID</label>
+                        <input type="text" class="form-control" id="applyingPartyId" name="applyingPartyId">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="applicationDate">Application Date</label>
+                        <input type="date" class="form-control" id="applicationDate" name="applicationDate">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="approverPartyId">Approver Party</label>
+                        <input type="text" class="form-control" id="approverPartyId" name="approverPartyId">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="approverPartyId_ic" value="Y" checked>
+                            <label class="form-check-label">Ignore case</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="jobRequisitionId">Job Requisition ID</label>
+                        <input type="text" class="form-control" id="jobRequisitionId" name="jobRequisitionId">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Find</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="search-results" class="card mt-4">
+        <div class="card-header">
+            <h5>Search Results</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Application ID</th>
+                            <th>Status Code</th>
+                            <th>Applying Party ID</th>
+                            <th>Application Date</th>
+                            <th>Approver Party</th>
+                            <th>Job Requisition ID</th>
+                            <th>Update</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Demo data for table rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+    function populateResultsTable(data) {
+    const tbody = document.querySelector('#resultsBody');
+    tbody.innerHTML = '';  // Clear existing results
+
+    if (data.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = '<td colspan="9">No results found.</td>'; // Updated colspan to match the number of columns
+        tbody.appendChild(emptyRow);
+    } else {
+        data.forEach((job, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${job.applicationId || 'N/A'}</td>
+                <td id="status-${job.applicationId}">${job.status || 'N/A'}</td>
+                <td>${job.applyingPartyId || 'N/A'}</td>
+                <td>${job.applicationDate || 'N/A'}</td>
+                <td>${job.approverPartyId  || 'N/A'}</td>
+                <td>${job.jobRequisitionId || 'N/A'}</td>
+                <td>
+                        <button class="btn btn-sm btn-success" onclick="approveRow('${job.applicationId}')">Approve</button>
+                        <button class="btn btn-sm btn-warning" onclick="rejectRow('${job.applicationId}')">Reject</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+}
+
+    document.getElementById('searchForm').addEventListener('submit', function (event) {
+        event.preventDefault();  // Prevent default form submission
+
+        // Collect form data
+        const applicationId = document.getElementById('applicationId').value;
+        const statusId = document.getElementById('statusId').value;
+        const applicationDate = document.getElementById('applicationDate').value;
+        const applyingPartyId = document.getElementById('applyingPartyId').value;  // Get selected operator
+        const approverPartyId = document.getElementById('approverPartyId').value;
+        const jobRequisitionId = document.getElementById('jobRequisitionId').value;
+        
+        // Create a payload to send to the server
+        const payload = {
+            applicationId: applicationId,
+            status : statusId,
+            applyingPartyId: applyingPartyId,
+            applicationDate: applicationDate,
+            approverPartyId: approverPartyId,
+            jobRequisitionId: jobRequisitionId,
+        };
+
+        // Make the AJAX request
+        fetch('/hrms/job-application-search/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Add CSRF token if needed
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(response => response.json())
+        .then(data => {populateResultsTable(data)
+    })
+        .catch(error => console.error('Error fetching employee data:', error));
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Check if this cookie string begins with the name we want
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+///////////////////////////////////////////////// Function for Updating the status as Approved / Rejected ////////////////////////////////
+
+function approveRow(applicationId) {
+    updateStatus(applicationId, 'Approved');
+}
+
+function rejectRow(applicationId) {
+    updateStatus(applicationId, 'Rejected');
+}
+
+function updateStatus(applicationId, status) {
+    fetch(`/hrms/update-application-status/${applicationId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken':  getCookie('csrftoken')  // Ensure CSRF token is handled
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => {
+        // Log the response status and JSON data for debugging
+        console.log("Response Status:", response.status);
+        return response.json();  // Convert response to JSON
+    })
+    .then(data => {
+        if (data.message) {
+            console.log("Response Data:", data);
+            // Update the status cell in the table
+            const statusCell = document.getElementById(`status-${applicationId}`);
+            statusCell.innerText = status;
+
+            alert(data.message);  // Show the success message
+        } else {
+            alert(data.error);  // Show error message
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating the status.');
+    });
+}
+</script>
+
+<!-- Bootstrap JS, Popper.js, and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
+{% endblock %}

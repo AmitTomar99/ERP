@@ -1,0 +1,204 @@
+{% extends "dash_navbar.html" %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Boxicons -->
+  <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+  <!-- My CSS -->
+  {% block css %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+  {% endblock %}
+
+  <title>Dashboard</title>
+</head>
+
+<body>
+
+
+  
+  <!-- CONTENT -->
+  <section id="content">
+
+    <!-- MAIN -->
+    <main>
+      <ul class="box-info">
+        <li class="small-li w-10">
+          <i class="bx bx-phone small"></i>
+            <a href="#">My Calls</a>
+        </li>
+        <li>
+          <i class="bx bxs-group"></i>
+            <a href="#">My Activity Stream</a>
+        </li>
+        <li>
+          <i class="bx bx-calendar-event"></i>
+            <a href="#">My Meetings</a>
+        </li>
+        <li>
+          <i class="bx bx-group"></i>
+            <a href="#">My Leads</a>
+        </li>
+        <li>
+          <i class="bx bx-dollar-circle"></i>
+            <a href="#">My Top Open Opportunities</a>
+        </li>
+        <li>
+          <i class="bx bx-shopping-bag"></i>
+            <a href="#">Sales</a>
+        </li>
+      </ul>
+
+      <div class="table-data">
+        <div class="meetings">
+          <div class="head">
+            <h3>Recent Meetings</h3>
+            <button type="button" class="meeting-search-btn">
+              <i class="bx bx-search"></i>
+            </button>
+            <input type="search" placeholder="Search Meetings..." class="meeting-search" hidden />
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Lead</th>
+                <th>Date Meeting</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <p>Lead Name 1</p>
+                </td>
+                <td>01-10-2021</td>
+                <td><span class="status completed">Completed</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <p>Lead Name 2</p>
+                </td>
+                <td>01-10-2021</td>
+                <td><span class="status pending">Pending</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <p>Lead Name 3</p>
+                </td>
+                <td>01-10-2021</td>
+                <td><span class="status cancel">Cancel</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <p>Lead Name 4</p>
+                </td>
+                <td>01-10-2021</td>
+                <td><span class="status pending">Pending</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <p>Lead Name 5</p>
+                </td>
+                <td>01-10-2021</td>
+                <td><span class="status completed">Completed</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="sales">
+          <div class="head">
+            <h3>Sales</h3>
+            <button type="button" class="sales-search-btn">
+              <i class="bx bx-search"></i>
+            </button>
+            <input type="search" placeholder="Search Sales..." class="sales-search" hidden />
+          </div>
+          <ul class="sales-list">
+            <li class="available">
+              <p>Sale A - $20,000 Deal</p>
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </li>
+            <li class="available">
+              <p>Sale B - $15,000 Deal</p>
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </li>
+            <li class="not-available">
+              <p>Sale C - $30,000 Deal</p>
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </li>
+            <li class="available">
+              <p>Sale D - $25,000 Deal</p>
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </li>
+            <li class="not-available">
+              <p>Sale E - $40,000 Deal</p>
+              <i class="bx bx-dots-vertical-rounded"></i>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </main>
+    <!-- MAIN -->
+  </section>
+  <!-- CONTENT -->
+
+  <script>
+
+    //sunny
+    const meetingSearchBtn = document.querySelector(".meeting-search-btn");
+
+		const meetingSearchInput = document.querySelector(".meeting-search");
+
+		meetingSearchBtn.addEventListener("click", function () {
+			meetingSearchInput.hidden = !meetingSearchInput.hidden; // Toggle visibility
+			if (!meetingSearchInput.hidden) {
+				meetingSearchInput.focus(); // Focus on input when shown
+			}
+		});
+
+		// Search and filter functionality for Recent Meetings
+		meetingSearchInput.addEventListener("input", function () {
+			const searchTerm = this.value.toLowerCase();
+			const meetingRows = document.querySelectorAll(".meetings table tbody tr");
+			meetingRows.forEach((row) => {
+				const leadName = row.querySelector("td p").textContent.toLowerCase();
+				row.style.display = leadName.includes(searchTerm) ? "" : "none"; // Show or hide rows based on search term
+			});
+		});
+
+		// Toggle search box for sales
+		const salesSearchBtn = document.querySelector(".sales-search-btn");
+		const salesSearchInput = document.querySelector(".sales-search");
+
+		salesSearchBtn.addEventListener("click", function () {
+			salesSearchInput.hidden = !salesSearchInput.hidden; // Toggle visibility
+			if (!salesSearchInput.hidden) {
+				salesSearchInput.focus(); // Focus on input when shown
+			}
+		});
+
+		// Search and filter functionality for Sales
+		salesSearchInput.addEventListener("input", function () {
+			const searchTerm = this.value.toLowerCase();
+			const salesList = document.querySelectorAll(".sales-list li");
+			salesList.forEach((sale) => {
+				const saleInfo = sale.querySelector("p").textContent.toLowerCase();
+				sale.style.display = saleInfo.includes(searchTerm) ? "" : "none"; // Show or hide sales based on search term
+			});
+
+      
+		});
+
+  </script>
+</body>
+
+</html>
+{% endblock %}
